@@ -4,6 +4,7 @@
 # Iteratively implements PRD stories until all are complete
 #
 # Usage: ralph [options]
+#   -M, --model MODEL        Model to use (or 'select' to choose interactively)
 #   -m, --max-iterations N   Maximum iterations (default: 10)
 #   -p, --prd FILE           Path to prd.json (default: ./prd.json)
 #   -d, --dry-run            Show what would be done without executing
@@ -23,10 +24,15 @@ NC='\033[0m' # No Color
 MAX_ITERATIONS=10
 PRD_FILE="./prd.json"
 DRY_RUN=false
+MODEL=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
+        -M|--model)
+            MODEL="$2"
+            shift 2
+            ;;
         -m|--max-iterations)
             MAX_ITERATIONS="$2"
             shift 2
@@ -40,7 +46,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         -h|--help)
-            head -14 "$0" | tail -10
+            head -15 "$0" | tail -11
             exit 0
             ;;
         *)
@@ -49,6 +55,57 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# Interactive model selection
+select_model() {
+    echo -e "${BLUE}Fetching available models...${NC}"
+    
+    local models
+    models=$(opencode models 2>/dev/null)
+    
+    if [[ -z "$models" ]]; then
+        echo -e "${RED}Failed to fetch models. Is OpenCode configured?${NC}"
+        exit 1
+    fi
+    
+    # Convert to array
+    local model_array=()
+    while IFS= read -r line; do
+        [[ -n "$line" ]] && model_array+=("$line")
+    done <<< "$models"
+    
+    local total=${#model_array[@]}
+    
+    echo ""
+    echo -e "${GREEN}Available models (${total} total):${NC}"
+    echo ""
+    
+    # Show models with numbers
+    local i=1
+    for model in "${model_array[@]}"; do
+        printf "  %3d) %s\n" "$i" "$model"
+        ((i++))
+    done
+    
+    echo ""
+    read -rp "Select model number (1-${total}): " selection
+    
+    # Validate selection
+    if ! [[ "$selection" =~ ^[0-9]+$ ]] || [[ "$selection" -lt 1 ]] || [[ "$selection" -gt "$total" ]]; then
+        echo -e "${RED}Invalid selection${NC}"
+        exit 1
+    fi
+    
+    MODEL="${model_array[$((selection-1))]}"
+    echo ""
+    echo -e "${GREEN}Selected: ${YELLOW}${MODEL}${NC}"
+    echo ""
+}
+
+# Handle model selection if requested
+if [[ "$MODEL" == "select" ]]; then
+    select_model
+fi
 
 # Check dependencies
 check_dependencies() {
@@ -128,6 +185,7 @@ main() {
     echo -e "${GREEN}Starting Ralph...${NC}"
     echo -e "PRD: ${YELLOW}$PRD_FILE${NC}"
     echo -e "Max iterations: ${YELLOW}$MAX_ITERATIONS${NC}"
+    [[ -n "$MODEL" ]] && echo -e "Model: ${YELLOW}$MODEL${NC}"
     
     # Initialize progress.txt if it doesn't exist
     if [[ ! -f "progress.txt" ]]; then
@@ -153,8 +211,13 @@ main() {
             exit 0
         fi
         
+        # Build opencode command
+        local opencode_cmd="opencode run"
+        [[ -n "$MODEL" ]] && opencode_cmd="$opencode_cmd -m $MODEL"
+        opencode_cmd="$opencode_cmd \"/ralph\""
+        
         if [[ "$DRY_RUN" == true ]]; then
-            echo -e "${YELLOW}[DRY RUN]${NC} Would execute: opencode run \"/ralph\""
+            echo -e "${YELLOW}[DRY RUN]${NC} Would execute: $opencode_cmd"
             echo ""
             exit 0
         fi
@@ -163,7 +226,7 @@ main() {
         echo -e "${BLUE}Running OpenCode...${NC}"
         echo ""
         
-        if ! opencode run "/ralph"; then
+        if ! eval "$opencode_cmd"; then
             echo -e "${RED}OpenCode exited with error. Stopping Ralph.${NC}"
             exit 1
         fi
