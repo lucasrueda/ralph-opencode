@@ -54,7 +54,11 @@ if ! command -v opencode &> /dev/null; then
 fi
 
 # Determine if running from curl or local
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}" 2>/dev/null)" && pwd 2>/dev/null || echo "")"
+# Handle case where BASH_SOURCE is unbound (piped from curl)
+SCRIPT_DIR=""
+if [[ -n "${BASH_SOURCE[0]:-}" ]]; then
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd 2>/dev/null || echo "")"
+fi
 
 if [[ -z "$SCRIPT_DIR" ]] || [[ ! -f "$SCRIPT_DIR/bin/ralph" ]]; then
     # Running from curl - need to clone
