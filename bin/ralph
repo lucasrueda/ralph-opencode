@@ -4,8 +4,8 @@
 # Iteratively implements PRD stories until all are complete
 #
 # Usage: ralph [options]
-#   -M, --model MODEL        Model to use (or 'select' to choose interactively)
-#   -m, --max-iterations N   Maximum iterations (default: 10)
+#   -m, --model MODEL        Model to use (or 'select' to choose interactively)
+#   -n, --max-iterations N   Maximum iterations (default: 10)
 #   -p, --prd FILE           Path to prd.json (default: ./prd.json)
 #   -d, --dry-run            Show what would be done without executing
 #   -h, --help               Show this help message
@@ -29,11 +29,11 @@ MODEL=""
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-        -M|--model)
+        -m|--model)
             MODEL="$2"
             shift 2
             ;;
-        -m|--max-iterations)
+        -n|--max-iterations)
             MAX_ITERATIONS="$2"
             shift 2
             ;;
@@ -240,7 +240,7 @@ main() {
     echo -e "${YELLOW}Max iterations ($MAX_ITERATIONS) reached.${NC}"
     echo -e "Incomplete stories: ${RED}$(get_incomplete_count)${NC}"
     echo ""
-    echo "Run 'ralph' again to continue, or increase max iterations with -m flag."
+    echo "Run 'ralph' again to continue, or increase max iterations with -n flag."
     exit 1
 }
 
