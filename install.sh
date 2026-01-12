@@ -21,7 +21,7 @@ NC='\033[0m'
 
 REPO_URL="https://github.com/lucasrueda/ralph-opencode.git"
 INSTALL_DIR="${HOME}/.opencode/ralph-opencode"
-SKILLS_DIR="${HOME}/.opencode/skills"
+SKILLS_DIR="${HOME}/.config/opencode/skill"
 BIN_DIR="${HOME}/.local/bin"
 
 echo -e "${BLUE}"
@@ -88,14 +88,15 @@ else
     fi
 fi
 
-# Create skills directory
+# Install skills (OpenCode requires: skill/<name>/SKILL.md)
 echo -e "${BLUE}Installing skills...${NC}"
-mkdir -p "$SKILLS_DIR"
 
-# Symlink skills
-for skill in "$SCRIPT_DIR/skills/"*.md; do
-    skill_name=$(basename "$skill")
-    ln -sf "$skill" "$SKILLS_DIR/$skill_name"
+for skill_dir in "$SCRIPT_DIR/skills/"*/; do
+    skill_name=$(basename "$skill_dir")
+    target_dir="$SKILLS_DIR/$skill_name"
+    
+    mkdir -p "$target_dir"
+    ln -sf "$skill_dir/SKILL.md" "$target_dir/SKILL.md"
     echo -e "  ${GREEN}✓${NC} $skill_name"
 done
 

@@ -1,3 +1,10 @@
+---
+name: generate-prd
+description: Generate a structured PRD (Product Requirements Document) with user stories from a natural language project description
+license: MIT
+compatibility: opencode
+---
+
 # Generate PRD Skill
 
 You are a product manager creating a PRD (Product Requirements Document) from a user's description.

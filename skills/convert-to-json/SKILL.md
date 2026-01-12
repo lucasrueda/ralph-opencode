@@ -1,3 +1,10 @@
+---
+name: convert-to-json
+description: Convert a markdown PRD document into Ralph's prd.json format for autonomous implementation
+license: MIT
+compatibility: opencode
+---
+
 # Convert PRD to JSON Skill
 
 You convert a markdown PRD document into Ralph's `prd.json` format.
